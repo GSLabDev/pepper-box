@@ -25,9 +25,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Properties;
+import java.time.*;
 
 /**
  * Created by satish on 5/3/17.
+ * Updated by filipe.oliveira on 02/04/18
  */
 public class PepperBoxLoadGenTest {
     private static final String ZKHOST = "127.0.0.1";
@@ -56,7 +58,7 @@ public class PepperBoxLoadGenTest {
         brokerProps.setProperty("log.dirs", Files.createTempDirectory("kafka-").toAbsolutePath().toString());
         brokerProps.setProperty("listeners", "PLAINTEXT://" + BROKERHOST +":" + BROKERPORT);
         KafkaConfig config = new KafkaConfig(brokerProps);
-        Time mock = new MockTime();
+        MockTime mock = new MockTime();
         kafkaServer = TestUtils.createServer(config, mock);
         //AdminUtils.createTopic(zkUtils, TOPIC, 1, 1, new Properties(), RackAwareMode.Disabled$.MODULE$);
 

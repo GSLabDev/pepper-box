@@ -29,8 +29,11 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.time.*;
+
 /**
  * Created by satish on 5/3/17.
+ * Updated by filipe.oliveira on 02/04/18
  */
 public class PepperBoxSamplerTest {
 
@@ -62,7 +65,7 @@ public class PepperBoxSamplerTest {
         brokerProps.setProperty("log.dirs", Files.createTempDirectory("kafka-").toAbsolutePath().toString());
         brokerProps.setProperty("listeners", "PLAINTEXT://" + BROKERHOST +":" + BROKERPORT);
         KafkaConfig config = new KafkaConfig(brokerProps);
-        Time mock = new MockTime();
+        MockTime mock = new MockTime();
         kafkaServer = TestUtils.createServer(config, mock);
         //AdminUtils.createTopic(zkUtils, TOPIC, 1, 1, new Properties(), RackAwareMode.Disabled$.MODULE$);
 
