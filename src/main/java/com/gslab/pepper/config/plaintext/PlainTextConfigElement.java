@@ -43,20 +43,14 @@ public class PlainTextConfigElement extends ConfigTestElement implements TestBea
      */
     @Override
     public void iterationStart(LoopIterationEvent loopIterationEvent) {
-
         //Check if load generator is instantiated
-        if (generator == null) {
-
             try {
-
                 //instantiate plaintext load generator
                 generator = new PlaintTextLoadGenerator(getJsonSchema());
 
             } catch (Exception e) {
                 log.error("Failed to create PlaintTextLoadGenerator instance", e);
             }
-
-        }
 
         //For ever iteration put message in jmeter variables
         JMeterVariables variables = JMeterContextService.getContext().getVariables();

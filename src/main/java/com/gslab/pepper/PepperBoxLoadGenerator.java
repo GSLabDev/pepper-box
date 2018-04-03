@@ -4,7 +4,6 @@ import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.google.common.util.concurrent.RateLimiter;
 import com.gslab.pepper.exception.PepperBoxException;
-import com.gslab.pepper.input.SchemaProcessor;
 import com.gslab.pepper.util.ProducerKeys;
 import com.gslab.pepper.util.PropsKeys;
 import joptsimple.ArgumentAcceptingOptionSpec;
@@ -60,14 +59,6 @@ public class PepperBoxLoadGenerator extends Thread {
      */
     public PepperBoxLoadGenerator(String schemaFile, String producerProps, Integer throughput, Integer duration) throws PepperBoxException {
 
-        Path path = Paths.get(schemaFile);
-        try {
-            String inputSchema = new String(Files.readAllBytes(path));
-            SchemaProcessor schemaProcessor = new SchemaProcessor();
-            iterator = schemaProcessor.getPlainTextMessageIterator(inputSchema);
-        } catch (IOException e) {
-            throw new PepperBoxException(e);
-        }
         Properties inputProps = new Properties();
         try {
             inputProps.load(new FileInputStream(producerProps));
@@ -191,45 +182,4 @@ public class PepperBoxLoadGenerator extends Thread {
             }
         }
     }
-
-    public static void main(String[] args) {
-        OptionParser parser = new OptionParser();
-        ArgumentAcceptingOptionSpec<String> schemaFile = parser.accepts("schema-file", "REQUIRED: Input schema file absolute path.")
-                .withRequiredArg()
-                .describedAs("schema file")
-                .ofType(String.class);
-        ArgumentAcceptingOptionSpec<String> producerConfig = parser.accepts("producer-config-file", "REQUIRED: Kafka producer properties file absolute path.")
-                .withRequiredArg()
-                .describedAs("producer properties")
-                .ofType(String.class);
-        ArgumentAcceptingOptionSpec<Integer> throughput = parser.accepts("throughput-per-producer", "REQUIRED: Throttle rate per thread.")
-                .withRequiredArg()
-                .describedAs("throughput")
-                .ofType(Integer.class);
-        ArgumentAcceptingOptionSpec<Integer> duration = parser.accepts("test-duration", "REQUIRED: Test duration in seconds.")
-                .withRequiredArg()
-                .describedAs("test duration")
-                .ofType(Integer.class);
-        ArgumentAcceptingOptionSpec<Integer> threadCount = parser.accepts("num-producers", "REQUIRED: Number of producer threads.")
-                .withRequiredArg()
-                .describedAs("producers")
-                .ofType(Integer.class);
-
-        if (args.length == 0) {
-            CommandLineUtils.printUsageAndDie(parser, "Kafka console load generator.");
-        }
-        OptionSet options = parser.parse(args);
-        checkRequiredArgs(parser, options, schemaFile, producerConfig, throughput, duration, threadCount);
-        try {
-            int totalThreads = options.valueOf(threadCount);
-            for (int i = 0; i < totalThreads; i++) {
-                PepperBoxLoadGenerator jsonProducer = new PepperBoxLoadGenerator(options.valueOf(schemaFile), options.valueOf(producerConfig), options.valueOf(throughput), options.valueOf(duration));
-                jsonProducer.start();
-            }
-
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed to generate load", e);
-        }
-    }
-
 }
