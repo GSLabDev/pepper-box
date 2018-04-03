@@ -16,7 +16,7 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.config.SslConfigs;
-import org.apache.kafka.common.protocol.SecurityProtocol;
+import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.apache.log.Logger;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.lang.instrument.*;
 
 /**
  * The PepperBoxKafkaSampler class custom java sampler for jmeter.
@@ -48,6 +49,9 @@ public class PepperBoxKafkaSampler extends AbstractJavaSamplerClient {
 
     private boolean key_message_flag = false;
     private static final Logger log = LoggingManager.getLoggerForClass();
+
+    private static Instrumentation instrumentation;
+
 
     /**
      * Set default parameters and their values
@@ -79,21 +83,17 @@ public class PepperBoxKafkaSampler extends AbstractJavaSamplerClient {
         defaultParameters.addArgument(ProducerKeys.JAVA_SEC_KRB5_CONFIG, ProducerKeys.JAVA_SEC_KRB5_CONFIG_DEFAULT);
         defaultParameters.addArgument(ProducerKeys.SASL_KERBEROS_SERVICE_NAME, ProducerKeys.SASL_KERBEROS_SERVICE_NAME_DEFAULT);
         defaultParameters.addArgument(ProducerKeys.SASL_MECHANISM, ProducerKeys.SASL_MECHANISM_DEFAULT);
-
         defaultParameters.addArgument(ProducerKeys.SSL_ENABLED, ProducerKeys.FLAG_NO);
         defaultParameters.addArgument(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "<Key Password>");
         defaultParameters.addArgument(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "<Keystore Location>");
         defaultParameters.addArgument(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "<Keystore Password>");
         defaultParameters.addArgument(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "<Truststore Location>");
         defaultParameters.addArgument(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "<Truststore Password>");
-
-
-
         return defaultParameters;
     }
 
     /**
-     * Gets invoked exactly once  before thread starts
+     * Gets invoked exactly once before thread starts
      *
      * @param context
      */
@@ -101,7 +101,6 @@ public class PepperBoxKafkaSampler extends AbstractJavaSamplerClient {
     public void setupTest(JavaSamplerContext context) {
 
         Properties props = new Properties();
-
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getBrokerServers(context));
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, context.getParameter(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG));
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, context.getParameter(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG));
@@ -114,14 +113,12 @@ public class PepperBoxKafkaSampler extends AbstractJavaSamplerClient {
         props.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, context.getParameter(ProducerConfig.COMPRESSION_TYPE_CONFIG));
         props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, context.getParameter(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG));
         props.put(ProducerKeys.SASL_MECHANISM, context.getParameter(ProducerKeys.SASL_MECHANISM));
-
         Iterator<String> parameters = context.getParameterNamesIterator();
         parameters.forEachRemaining(parameter -> {
             if (parameter.startsWith("_")) {
                 props.put(parameter.substring(1), context.getParameter(parameter));
             }
         });
-
 
         String sslEnabled = context.getParameter(ProducerKeys.SSL_ENABLED);
 
@@ -148,9 +145,7 @@ public class PepperBoxKafkaSampler extends AbstractJavaSamplerClient {
         msg_val_placeHolder = context.getParameter(PropsKeys.MESSAGE_VAL_PLACEHOLDER_KEY);
         topic = context.getParameter(ProducerKeys.KAFKA_TOPIC_CONFIG);
         producer = new KafkaProducer<String, Object>(props);
-
     }
-
 
     /**
      * For each sample request this method is invoked and will return success/failure result
@@ -160,31 +155,42 @@ public class PepperBoxKafkaSampler extends AbstractJavaSamplerClient {
      */
     @Override
     public SampleResult runTest(JavaSamplerContext context) {
-
         SampleResult sampleResult = new SampleResult();
-        sampleResult.sampleStart();
+        // Record the start time of the sample
         Object message_val = JMeterContextService.getContext().getVariables().getObject(msg_val_placeHolder);
-        ProducerRecord<String, Object> producerRecord;
-        try {
-            if (key_message_flag) {
-                Object message_key = JMeterContextService.getContext().getVariables().getObject(msg_key_placeHolder);
-                producerRecord = new ProducerRecord<String, Object>(topic, message_key.toString(), message_val);
-            } else {
-                producerRecord = new ProducerRecord<String, Object>(topic, message_val);
+        long message_val_size = 0;
+        if( message_val != null ){
+            message_val_size = message_val.toString().getBytes().length;
+            sampleResult.setBodySize( message_val_size );
+            ProducerRecord<String, Object> producerRecord;
+            try {
+                if (key_message_flag) {
+                    Object message_key = JMeterContextService.getContext().getVariables().getObject(msg_key_placeHolder);
+                    producerRecord = new ProducerRecord<String, Object>(topic, message_key.toString(), message_val);
+                } else {
+                    producerRecord = new ProducerRecord<String, Object>(topic, message_val);
+                }
+                sampleResult.sampleStart();
+                producer.send(producerRecord);
+                sampleResult.sampleEnd();
+                sampleResult.setResponseData(message_val.toString(), StandardCharsets.UTF_8.name());
+                // Sets the successful attribute of the SampleResult object.
+                sampleResult.setSuccessful(true);
+                // Set result statuses OK - shorthand method to set: ResponseCode ResponseMessage Successful status
+                sampleResult.setSentBytes( message_val_size );
+                sampleResult.setResponseOK();
+            } catch (Exception e) {
+                sampleResult.sampleEnd();
+                log.error("Failed to send message", e);
+                sampleResult.setResponseData(e.getMessage(), StandardCharsets.UTF_8.name());
+                // Sets the successful attribute of the SampleResult object.
+                sampleResult.setSuccessful(false);
             }
-            producer.send(producerRecord);
-            sampleResult.setResponseData(message_val.toString(), StandardCharsets.UTF_8.name());
-            sampleResult.setSuccessful(true);
-            sampleResult.sampleEnd();
-
-        } catch (Exception e) {
-            log.error("Failed to send message", e);
-            sampleResult.setResponseData(e.getMessage(), StandardCharsets.UTF_8.name());
-            sampleResult.setSuccessful(false);
-            sampleResult.sampleEnd();
-
         }
-
+        else{
+            log.error("Error while getting message from JMeterContextService");
+            sampleResult.setSuccessful(false);
+        }        
         return sampleResult;
     }
 
@@ -227,9 +233,7 @@ public class PepperBoxKafkaSampler extends AbstractJavaSamplerClient {
             } catch (IOException | KeeperException | InterruptedException e) {
 
                 log.error("Failed to get broker information", e);
-
             }
-
         }
 
         if (kafkaBrokers.length() > 0) {

@@ -32,14 +32,14 @@ public class PlainTextConfigElementBeanInfo extends BeanInfoSupport {
                 PLACE_HOLDER, JSON_SCHEMA
         });
 
-        PropertyDescriptor placeHolderProps = property(PLACE_HOLDER);
-        placeHolderProps.setValue(NOT_UNDEFINED, Boolean.TRUE);
-        placeHolderProps.setValue(DEFAULT, PropsKeys.MSG_PLACEHOLDER);
-        placeHolderProps.setValue(NOT_EXPRESSION, Boolean.TRUE);
+        PropertyDescriptor placeHolderProps = property( PLACE_HOLDER );
+        placeHolderProps.setValue( NOT_UNDEFINED, Boolean.TRUE );
+        placeHolderProps.setValue( DEFAULT, PropsKeys.MSG_PLACEHOLDER );
+        placeHolderProps.setValue( NOT_EXPRESSION, Boolean.TRUE );
 
         //Create inout Text Area
-        PropertyDescriptor p = property(JSON_SCHEMA);
-        p.setPropertyEditorClass(TextAreaEditor.class);
-        p.setValue(NOT_UNDEFINED, Boolean.TRUE);
+        PropertyDescriptor p = property( JSON_SCHEMA );
+        p.setPropertyEditorClass( TextAreaEditor.class );
+        p.setValue( NOT_UNDEFINED, Boolean.TRUE );
     }
 }
