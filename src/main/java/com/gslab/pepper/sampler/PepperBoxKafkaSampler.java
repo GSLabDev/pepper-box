@@ -15,11 +15,14 @@ import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.protocol.SecurityProtocol;
 import org.apache.log.Logger;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
+import java.util.concurrent.CountDownLatch;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -30,7 +33,10 @@ import java.util.Properties;
 /**
  * The PepperBoxKafkaSampler class custom java sampler for jmeter.
  *
- * @Author Satish Bhor<satish.bhor@gslab.com>, Nachiket Kate <nachiket.kate@gslab.com>
+ * @Author Satish Bhor<satish.bhor@gslab.com> 
+ * @Author Nachiket Kate <nachiket.kate@gslab.com>
+ * @Author Filipe Oliveira <filipe.oliveira@farfetch.com>
+ * 
  * @Version 1.0
  * @since 01/03/2017
  */
@@ -41,6 +47,9 @@ public class PepperBoxKafkaSampler extends AbstractJavaSamplerClient {
 
     // topic on which messages will be sent
     private String topic;
+
+    //ack type {-1,0,1}
+    private int ack;
 
     //Message placeholder keys
     private String msg_key_placeHolder;
@@ -100,8 +109,10 @@ public class PepperBoxKafkaSampler extends AbstractJavaSamplerClient {
     @Override
     public void setupTest(JavaSamplerContext context) {
 
-        Properties props = new Properties();
+        // set the ack type
+        this.ack =  Integer.parseInt( context.getParameter(ProducerConfig.ACKS_CONFIG) );
 
+        Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getBrokerServers(context));
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, context.getParameter(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG));
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, context.getParameter(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG));
@@ -164,26 +175,66 @@ public class PepperBoxKafkaSampler extends AbstractJavaSamplerClient {
         SampleResult sampleResult = new SampleResult();
         sampleResult.sampleStart();
         Object message_val = JMeterContextService.getContext().getVariables().getObject(msg_val_placeHolder);
-        ProducerRecord<String, Object> producerRecord;
-        try {
-            if (key_message_flag) {
-                Object message_key = JMeterContextService.getContext().getVariables().getObject(msg_key_placeHolder);
-                producerRecord = new ProducerRecord<String, Object>(topic, message_key.toString(), message_val);
-            } else {
-                producerRecord = new ProducerRecord<String, Object>(topic, message_val);
+        long message_val_size = 0;
+        if( message_val != null ){
+            message_val_size = message_val.toString().getBytes().length;
+            sampleResult.setBodySize( message_val_size );
+            ProducerRecord<String, Object> producerRecord;
+            try {
+                if (key_message_flag) {
+                    Object message_key = JMeterContextService.getContext().getVariables().getObject(msg_key_placeHolder);
+                    producerRecord = new ProducerRecord<String, Object>(topic, message_key.toString(), message_val);
+                } else {
+                    producerRecord = new ProducerRecord<String, Object>(topic, message_val);
+                }
+                // Record the start time of the sample
+                sampleResult.sampleStart();
+                //  If set to zero then the producer will not wait for any acknowledgment from the server at all. The record will be immediately added to the socket buffer and considered sent. No guarantee can be made that the server has received the record in this case, and the retries configuration will not take effect (as the client won't generally know of any failures). The offset given back for each record will always be set to -1.
+                if ( this.ack == 0 ){
+                    producer.send(producerRecord);
+                }
+                 // ack == 1 
+                 // This will mean the leader will write the record to its local log but will respond without awaiting full acknowledgement from all followers. In this case should the leader fail immediately after acknowledging the record but before the followers have replicated it then the record will be lost.
+                 // ack == -1 | acks=all
+                 // This means the leader will wait for the full set of in-sync replicas to acknowledge the record. This guarantees that the record will not be lost as long as at least one in-sync replica remains alive. This is the strongest available guarantee. This is equivalent to the acks=-1 setting.  
+                else{
+                    
+                    java.util.Date utilDate = new java.util.Date();
+                    long unixTimestamp = utilDate.getTime();
+                    log.info("Creating CountDownLatch at timestamp " + unixTimestamp );
+                    CountDownLatch latch = new CountDownLatch(1);
+                    producer.send(producerRecord, new KafkaCallBack(sampleResult, latch, log ) );
+                    producer.flush();
+                    try {
+                        
+                        latch.await();
+                        unixTimestamp = utilDate.getTime();
+                        log.info("Passed latch at timestamp" + unixTimestamp );
+                      } catch (InterruptedException ex) {
+                        log.error(ex.getMessage());
+                        Thread.currentThread().interrupt();
+                      }
+                }
+                sampleResult.sampleEnd();  
+                
+                sampleResult.setResponseData(message_val.toString(), StandardCharsets.UTF_8.name());
+                // Sets the successful attribute of the SampleResult object.
+                sampleResult.setSuccessful(true);
+                // Set result statuses OK - shorthand method to set: ResponseCode ResponseMessage Successful status
+                sampleResult.setSentBytes( message_val_size );
+                sampleResult.setResponseOK();
+            } catch (Exception e) {
+                sampleResult.sampleEnd();
+                log.error("Failed to send message", e);
+                sampleResult.setResponseData(e.getMessage(), StandardCharsets.UTF_8.name());
+                // Sets the successful attribute of the SampleResult object.
+                sampleResult.setSuccessful(false);
             }
-            producer.send(producerRecord);
-            sampleResult.setResponseData(message_val.toString(), StandardCharsets.UTF_8.name());
-            sampleResult.setSuccessful(true);
-            sampleResult.sampleEnd();
-
-        } catch (Exception e) {
-            log.error("Failed to send message", e);
-            sampleResult.setResponseData(e.getMessage(), StandardCharsets.UTF_8.name());
-            sampleResult.setSuccessful(false);
-            sampleResult.sampleEnd();
-
         }
+        else{
+            log.error("Error while getting message from JMeterContextService");
+            sampleResult.setSuccessful(false);
+        }    
 
         return sampleResult;
     }
@@ -242,6 +293,35 @@ public class PepperBoxKafkaSampler extends AbstractJavaSamplerClient {
 
             return  context.getParameter(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG);
 
+        }
+    }
+}
+
+/**
+ * The KafkaCallBack class is a custom java kafka Callback.
+ * @author Filipe Oliveira <filipe.oliveira@farfetch.com>
+ * @version 1.1
+ * @since 03/04/2018
+ */
+class KafkaCallBack implements Callback {
+
+    private final SampleResult kafka_sample;
+    private final CountDownLatch latch;
+    private final Logger log;
+
+    public KafkaCallBack(SampleResult sample, CountDownLatch latch, Logger log ) {
+        this.kafka_sample = sample;
+        this.latch = latch;
+        this.log = log;
+       }
+
+    public void onCompletion(RecordMetadata metadata, Exception exception) {
+        if (metadata != null) {
+            latch.countDown();
+            log.info("onCompletion received");
+        } else {
+            log.error(exception.toString());
+            exception.printStackTrace();
         }
     }
 }
