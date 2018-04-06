@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  */
 public class ClassPropertyEditor extends PropertyEditorSupport implements ActionListener, TestBeanPropertyEditor, ClearGui {
 
-    private static Logger LOGGER = Logger.getLogger(PepperBoxLoadGenerator.class.getName());
+    private static Logger logger = Logger.getLogger(PepperBoxLoadGenerator.class.getName());
     //input class field
     private final JTextField textField = new JTextField();
 
@@ -67,7 +67,7 @@ public class ClassPropertyEditor extends PropertyEditorSupport implements Action
 
     public ClassPropertyEditor(PropertyDescriptor descriptor) {
         super(descriptor);
-        this.propertyDescriptor =descriptor;
+        this.setPropertyDescriptor(descriptor);
         this.init();
     }
 
@@ -82,7 +82,7 @@ public class ClassPropertyEditor extends PropertyEditorSupport implements Action
     }
 
     @Override
-    public void setAsText(String text) throws IllegalArgumentException {
+    public void setAsText(String text){
         this.textField.setText(text);
         this.textField.setCaretPosition(0);
     }
@@ -120,9 +120,9 @@ public class ClassPropertyEditor extends PropertyEditorSupport implements Action
         try {
 
             //Load class and get fields using reflection
-            Class loadedClass = Class.forName(className);
+            Class<?> loadedClass = Class.forName(className);
 
-            Field fields[] = loadedClass.getDeclaredFields();
+            Field[] fields = loadedClass.getDeclaredFields();
 
             for (Field field : fields) {
 
@@ -147,7 +147,7 @@ public class ClassPropertyEditor extends PropertyEditorSupport implements Action
             editors.setAccessible(true);
 
             //Retrieve TableEditor and set all fields with default values to it
-            PropertyEditor propertyEditors[] = (PropertyEditor[]) editors.get(testBeanCustomizer);
+            PropertyEditor[] propertyEditors = (PropertyEditor[]) editors.get(testBeanCustomizer);
             for (PropertyEditor propertyEditor : propertyEditors){
                 if (propertyEditor instanceof TableEditor){
                     propertyEditor.setValue(attributeList);
@@ -156,18 +156,26 @@ public class ClassPropertyEditor extends PropertyEditorSupport implements Action
 
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
             JOptionPane.showMessageDialog(null, "Failed to load class properties : " + e.getMessage(), "ERROR: Failed to load class properties!" , JOptionPane.ERROR_MESSAGE);
-            LOGGER.log(Level.SEVERE, "Failed to load class properties", e);
+            logger.log(Level.SEVERE, "Failed to load class properties", e);
         }
 
     }
 
     @Override
     public void setDescriptor(PropertyDescriptor propertyDescriptor) {
-        this.propertyDescriptor = propertyDescriptor;
+        this.setPropertyDescriptor(propertyDescriptor);
     }
 
     @Override
     public void clearGui() {
         this.textField.setText("");
     }
+
+	public PropertyDescriptor getPropertyDescriptor() {
+		return propertyDescriptor;
+	}
+
+	public void setPropertyDescriptor(PropertyDescriptor propertyDescriptor) {
+		this.propertyDescriptor = propertyDescriptor;
+	}
 }

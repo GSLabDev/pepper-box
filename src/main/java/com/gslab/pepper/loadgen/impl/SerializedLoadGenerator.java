@@ -1,15 +1,15 @@
 package com.gslab.pepper.loadgen.impl;
 
-import com.gslab.pepper.exception.PepperBoxException;
-import com.gslab.pepper.model.FieldExpressionMapping;
-import com.gslab.pepper.input.SchemaProcessor;
-import com.gslab.pepper.loadgen.BaseLoadGenerator;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
-
-import javax.swing.*;
 import java.util.Iterator;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.gslab.pepper.exception.PepperBoxException;
+import com.gslab.pepper.input.SchemaProcessor;
+import com.gslab.pepper.loadgen.BaseLoadGenerator;
+import com.gslab.pepper.model.FieldExpressionMapping;
 /**
  * The SerializedLoadGenerator is custom load generator class gets invoked from iteratorStart of SerializedConfigElement class
  *
@@ -19,11 +19,16 @@ import java.util.List;
  */
 public class SerializedLoadGenerator implements BaseLoadGenerator {
 
-    private transient Iterator<String> messageIterator = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7427309255608917237L;
+
+	private transient Iterator<String> messageIterator = null;
 
     private transient SchemaProcessor schemaProcessor = new SchemaProcessor();
 
-    private static final Logger log = LoggingManager.getLoggerForClass();
+	private static final Logger log = LoggerFactory.getLogger(SerializedLoadGenerator.class);
 
     /**
      * SerializedLoadGenerator constructor which initializes message iterator using schemaProcessor.
@@ -34,7 +39,7 @@ public class SerializedLoadGenerator implements BaseLoadGenerator {
 
         try {
 
-            this.messageIterator = schemaProcessor.getSerializedMessageIterator(inputClass, fieldExprMappings);
+            this.messageIterator = (Iterator<String>) schemaProcessor.getSerializedMessageIterator(inputClass, fieldExprMappings);
 
         }catch (Exception exc){
             log.error("Please make sure that properties data type and expression function return type are compatible with each other", exc);

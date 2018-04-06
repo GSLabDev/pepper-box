@@ -1,19 +1,17 @@
 package com.gslab.pepper.config.plaintext;
 
 
-import com.gslab.pepper.loadgen.BaseLoadGenerator;
-import com.gslab.pepper.loadgen.impl.PlaintTextLoadGenerator;
-import com.gslab.pepper.util.PropsKeys;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.engine.event.LoopIterationEvent;
 import org.apache.jmeter.engine.event.LoopIterationListener;
 import org.apache.jmeter.testbeans.TestBean;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterVariables;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
+import com.gslab.pepper.loadgen.BaseLoadGenerator;
+import com.gslab.pepper.loadgen.impl.PlaintTextLoadGenerator;
 
 /**
  * The PlainTextConfigElement custom jmeter config element. This class acts as plain text feeder to jmeter java sampler, it includes plaintext load generator which takes input schema and generates messages.
@@ -24,7 +22,12 @@ import javax.swing.*;
  */
 public class PlainTextConfigElement extends ConfigTestElement implements TestBean, LoopIterationListener {
 
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -8495908369126381356L;
+
+	private static final Logger log = LoggerFactory.getLogger(PlainTextConfigElement.class);
 
     //Input schema template could be json, xml, csv or custom plain text format
     private String jsonSchema;

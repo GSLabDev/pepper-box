@@ -1,11 +1,13 @@
 package com.gslab.pepper.exception;
 
-
-import java.io.IOException;
-
 public class PepperBoxException extends Exception {
 
-    public PepperBoxException(String message) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -1046606884335147045L;
+
+	public PepperBoxException(String message) {
         super(message);
     }
 

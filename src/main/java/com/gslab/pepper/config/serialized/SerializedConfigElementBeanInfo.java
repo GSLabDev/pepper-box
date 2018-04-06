@@ -1,18 +1,15 @@
 package com.gslab.pepper.config.serialized;
 
-import com.gslab.pepper.model.FieldExpressionMapping;
-import com.gslab.pepper.input.serialized.ClassPropertyEditor;
-import com.gslab.pepper.util.PropsKeys;
-import org.apache.jmeter.testbeans.BeanInfoSupport;
-import org.apache.jmeter.testbeans.TestBeanHelper;
-import org.apache.jmeter.testbeans.gui.*;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
-
 import java.beans.PropertyDescriptor;
-import java.beans.PropertyEditorManager;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+
+import org.apache.jmeter.testbeans.BeanInfoSupport;
+import org.apache.jmeter.testbeans.gui.TableEditor;
+import org.apache.jmeter.testbeans.gui.TypeEditor;
+
+import com.gslab.pepper.input.serialized.ClassPropertyEditor;
+import com.gslab.pepper.model.FieldExpressionMapping;
+import com.gslab.pepper.util.PropsKeys;
 
 /**
  * The SerializedConfigElementBeanInfo is UI for SerializedConfigElement class. This UI records class name and class field and expression mappings.

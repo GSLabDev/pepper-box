@@ -11,7 +11,12 @@ import org.apache.jmeter.testelement.AbstractTestElement;
  */
 public class FieldExpressionMapping extends AbstractTestElement {
 
-    //Class field name property
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 3071719822227707332L;
+
+	//Class field name property
     public static final String FIELD_NAME = "fieldName";
 
     //class field expression property

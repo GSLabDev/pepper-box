@@ -30,7 +30,7 @@ public class SchemaProcessor {
      * @throws InstantiationException
      * @throws ClassNotFoundException
      */
-    public Iterator getPlainTextMessageIterator(String inputSchema) throws PepperBoxException {
+    public Iterator<String> getPlainTextMessageIterator(String inputSchema) throws PepperBoxException {
 
         String processedSchema = schemaParser.getProcessedSchema(inputSchema);
         return  schemaTranslator.getPlainTextMsgIterator(processedSchema);
@@ -46,7 +46,7 @@ public class SchemaProcessor {
      * @throws InstantiationException
      * @throws ClassNotFoundException
      */
-    public Iterator getSerializedMessageIterator(String inputClass, List<FieldExpressionMapping> fieldExpressions) throws PepperBoxException {
+    public Iterator<String> getSerializedMessageIterator(String inputClass, List<FieldExpressionMapping> fieldExpressions) throws PepperBoxException {
 
         String execStatements = schemaParser.getProcessedSchema(fieldExpressions);
         return  schemaTranslator.getSerializedMsgIterator(inputClass, execStatements);

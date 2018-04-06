@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
@@ -35,16 +36,12 @@ import java.util.logging.Logger;
 /**
  * The com.gslab.pepper.PepperBoxLoadGenerator standalone load generator.
  * This class takes arguments like throttle per thread, test duration, no of thread and schema file and kafka producer properties and generates load at throttled rate.
- *
- * @Author Satish Bhor<satish.bhor@gslab.com>, Nachiket Kate <nachiket.kate@gslab.com>
- * @Version 1.0
- * @since 28/02/2017
  */
 public class PepperBoxLoadGenerator extends Thread {
 
-    private static Logger LOGGER = Logger.getLogger(PepperBoxLoadGenerator.class.getName());
+    private static Logger logger = Logger.getLogger(PepperBoxLoadGenerator.class.getName());
     private RateLimiter limiter;
-    private Iterator iterator = null;
+    private Iterator<?> iterator = null;
     private KafkaProducer<String, String> producer;
     private String topic;
     private long durationInMillis;
@@ -149,7 +146,7 @@ public class PepperBoxLoadGenerator extends Thread {
                 }
             } catch (IOException | KeeperException | InterruptedException e) {
 
-                LOGGER.log(Level.SEVERE, "Failed to get broker information", e);
+                logger.log(Level.SEVERE, "Failed to get broker information", e);
 
             }
 
@@ -184,8 +181,8 @@ public class PepperBoxLoadGenerator extends Thread {
         producer.send(keyedMsg);
     }
 
-    public static void checkRequiredArgs(OptionParser parser, OptionSet options, OptionSpec... required) {
-        for (OptionSpec optionSpec : required) {
+    public static void checkRequiredArgs(OptionParser parser, OptionSet options, OptionSpec<?>... required) {
+        for (OptionSpec<?> optionSpec : required) {
             if (!options.has(optionSpec)) {
                 CommandLineUtils.printUsageAndDie(parser, "Missing required argument \"" + optionSpec + "\"");
             }
@@ -222,13 +219,19 @@ public class PepperBoxLoadGenerator extends Thread {
         checkRequiredArgs(parser, options, schemaFile, producerConfig, throughput, duration, threadCount);
         try {
             int totalThreads = options.valueOf(threadCount);
+			long start = System.currentTimeMillis();
             for (int i = 0; i < totalThreads; i++) {
                 PepperBoxLoadGenerator jsonProducer = new PepperBoxLoadGenerator(options.valueOf(schemaFile), options.valueOf(producerConfig), options.valueOf(throughput), options.valueOf(duration));
                 jsonProducer.start();
             }
-
+			long end = System.currentTimeMillis();
+			logger.log(Level.INFO, "Start {0}", new Date(start));
+			logger.log(Level.INFO, "End {0}", new Date(end));
+			logger.log(Level.INFO, Long.toString(end-start));
+			logger.log(Level.INFO, Long.toString((end-start)/1000));
+			logger.log(Level.INFO, Long.toString((end-start)/60000));
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed to generate load", e);
+            logger.log(Level.SEVERE, "Failed to generate load", e);
         }
     }
 
