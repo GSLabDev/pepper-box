@@ -18,6 +18,7 @@ import java.util.Arrays;
 
 public class InMemoryJavaCompiler {
 
+	private InMemoryJavaCompiler() {}
     //Java system compiler
     private static JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 

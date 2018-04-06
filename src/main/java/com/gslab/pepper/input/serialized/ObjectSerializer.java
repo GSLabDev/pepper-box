@@ -16,11 +16,11 @@ import java.util.logging.Logger;
  * @Version 1.0
  * @since 01/03/2017
  */
-public class ObjectSerializer implements Serializer {
+public class ObjectSerializer implements Serializer<Object> {
 
     private static Logger logger = Logger.getLogger(ObjectSerializer.class.getName());
     @Override
-    public void configure(Map map, boolean b) {
+    public void configure(Map<String, ?> map, boolean b) {
         //TODO
     }
 

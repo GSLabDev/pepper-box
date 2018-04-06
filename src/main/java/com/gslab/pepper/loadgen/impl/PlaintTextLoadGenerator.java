@@ -1,13 +1,13 @@
 package com.gslab.pepper.loadgen.impl;
 
+import java.util.Iterator;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.gslab.pepper.exception.PepperBoxException;
 import com.gslab.pepper.input.SchemaProcessor;
 import com.gslab.pepper.loadgen.BaseLoadGenerator;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
-
-import javax.swing.*;
-import java.util.Iterator;
 /**
  * The PlaintTextLoadGenerator is custom load generator class gets invoked from iteratorStart of PlainTextConfigElement class
  *
@@ -18,11 +18,16 @@ import java.util.Iterator;
 
 public class PlaintTextLoadGenerator implements BaseLoadGenerator {
 
-    private transient Iterator<String> messageIterator = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -5224384360616297852L;
+
+	private transient Iterator<String> messageIterator = null;
 
     private transient SchemaProcessor schemaProcessor = new SchemaProcessor();
 
-    private static final Logger log = LoggingManager.getLoggerForClass();
+	private static final Logger log = LoggerFactory.getLogger(PlaintTextLoadGenerator.class);
 
     /**
      * PlaintTextLoadGenerator constructor which initializes message iterator using schemaProcessor
@@ -31,7 +36,7 @@ public class PlaintTextLoadGenerator implements BaseLoadGenerator {
     public PlaintTextLoadGenerator(String jsonSchema) throws PepperBoxException {
 
         try {
-            this.messageIterator = schemaProcessor.getPlainTextMessageIterator(jsonSchema);
+            this.messageIterator = (Iterator<String>) schemaProcessor.getPlainTextMessageIterator(jsonSchema);
         }catch (Exception exc){
             log.error("Please make sure that expressions functions are already defined and parameters are correctly passed.", exc);
             throw new PepperBoxException(exc);

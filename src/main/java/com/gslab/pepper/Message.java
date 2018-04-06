@@ -1,13 +1,11 @@
-package com.gslab.pepper.test;
-
+package com.gslab.pepper;
 import java.io.Serializable;
-
 public class Message  implements Serializable{
 
     /**
 	 * 
 	 */
-	private static final long serialVersionUID = 2128267708519841665L;
+	private static final long serialVersionUID = -4779327696792716598L;
 	private long messageId;
     private String messageBody;
     private String messageStatus;
@@ -52,16 +50,5 @@ public class Message  implements Serializable{
 
     public void setMessageTime(long messageTime) {
         this.messageTime = messageTime;
-    }
-
-    @Override
-    public String toString() {
-        return "Message{" +
-                "messageId=" + messageId +
-                ", messageBody='" + messageBody + '\'' +
-                ", messageStatus='" + messageStatus + '\'' +
-                ", messageCategory='" + messageCategory + '\'' +
-                ", messageTime=" + messageTime +
-                '}';
     }
 }

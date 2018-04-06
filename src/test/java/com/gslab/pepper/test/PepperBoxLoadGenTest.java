@@ -1,30 +1,31 @@
 package com.gslab.pepper.test;
 
-import com.gslab.pepper.PepperBoxLoadGenerator;
-import com.gslab.pepper.util.PropsKeys;
-import kafka.admin.AdminUtils;
-import kafka.server.KafkaConfig;
-import kafka.server.KafkaServer;
-import kafka.utils.*;
-import kafka.zk.EmbeddedZookeeper;
-import org.I0Itec.zkclient.ZkClient;
-import org.apache.jmeter.protocol.java.sampler.JavaSamplerContext;
-import org.apache.jmeter.threads.JMeterContext;
-import org.apache.jmeter.threads.JMeterContextService;
-import org.apache.jmeter.threads.JMeterVariables;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Properties;
+
+import org.I0Itec.zkclient.ZkClient;
+import org.apache.jmeter.threads.JMeterContext;
+import org.apache.jmeter.threads.JMeterContextService;
+import org.apache.jmeter.threads.JMeterVariables;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.utils.Time;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.gslab.pepper.PepperBoxLoadGenerator;
+
+import kafka.server.KafkaConfig;
+import kafka.server.KafkaServer;
+import kafka.utils.MockTime;
+import kafka.utils.TestUtils;
+import kafka.zk.EmbeddedZookeeper;
 
 /**
  * Created by satish on 5/3/17.
@@ -40,6 +41,8 @@ public class PepperBoxLoadGenTest {
     private KafkaServer kafkaServer = null;
 
     private ZkClient zkClient = null;
+    
+    KafkaConsumer<String, String> consumer;
 
     @Before
     public void setup() throws IOException {
@@ -47,8 +50,8 @@ public class PepperBoxLoadGenTest {
         zkServer = new EmbeddedZookeeper();
 
         String zkConnect = ZKHOST + ":" + zkServer.port();
-        zkClient = new ZkClient(zkConnect, 30000, 30000, ZKStringSerializer$.MODULE$);
-        ZkUtils zkUtils = ZkUtils.apply(zkClient, false);
+/*        zkClient = new ZkClient(zkConnect, 30000, 30000);
+        ZkUtils zkUtils = ZkUtils.apply(zkClient, false);*/
 
         Properties brokerProps = new Properties();
         brokerProps.setProperty("zookeeper.connect", zkConnect);
@@ -87,11 +90,15 @@ public class PepperBoxLoadGenTest {
         consumerProps.setProperty("key.deserializer","org.apache.kafka.common.serialization.StringDeserializer");
         consumerProps.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         consumerProps.put("auto.offset.reset", "earliest");
-        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProps);
+       try {
+        consumer = new KafkaConsumer<>(consumerProps);
         consumer.subscribe(Arrays.asList(TOPIC));
         ConsumerRecords<String, String> records = consumer.poll(30000);
         Assert.assertTrue("PepperBoxLoadGenerator validation failed", records.count() > 0);
-
+       }catch(Exception e) {  	   
+       }finally {
+    	   consumer.close();
+       }
     }
 
     @After

@@ -15,14 +15,15 @@ import java.util.logging.Logger;
  * @Version 1.0
  * @since 01/03/2017
  */
-public class ObjectDeserializer implements Deserializer {
+public class ObjectDeserializer implements Deserializer<Object> {
 
     private static Logger logger = Logger.getLogger(ObjectDeserializer.class.getName());
 
-    @Override
-    public void configure(Map map, boolean b) {
-        //TODO
-    }
+	@Override
+	public void configure(Map<String, ?> configs, boolean isKey) {
+		// TODO Auto-generated method stub
+		
+	}
 
     @Override
     public Object deserialize(String s, byte[] bytes) {
@@ -43,4 +44,6 @@ public class ObjectDeserializer implements Deserializer {
     public void close() {
         //TODO
     }
+
+
 }
