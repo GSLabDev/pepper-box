@@ -48,7 +48,7 @@ public class PepperBoxSamplerTest {
     private  JavaSamplerContext jmcx = null;
 
     @Before
-    public void setup() throws IOException {
+    public void setUp() throws IOException {
 
         zkServer = new EmbeddedZookeeper();
 
@@ -266,7 +266,7 @@ public class PepperBoxSamplerTest {
     }
 
     @After
-    public void teardown(){
+    public void tearDown(){
         kafkaServer.shutdown();
         zkClient.close();
         zkServer.shutdown();
