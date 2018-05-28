@@ -42,7 +42,7 @@ public class PepperBoxLoadGenTest {
     private ZkClient zkClient = null;
 
     @Before
-    public void setup() throws IOException {
+    public void setUp() throws IOException {
 
         zkServer = new EmbeddedZookeeper();
 
@@ -95,7 +95,7 @@ public class PepperBoxLoadGenTest {
     }
 
     @After
-    public void teardown(){
+    public void tearDown(){
         kafkaServer.shutdown();
         zkClient.close();
         zkServer.shutdown();
