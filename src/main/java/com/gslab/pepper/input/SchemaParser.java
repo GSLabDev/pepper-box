@@ -80,6 +80,11 @@ public class SchemaParser {
                    }
 
                }
+
+               if (token.length() >= PropsKeys.CONST_TOKEN_SIZE){
+                   appendStaticString(token, processedSchema);
+                   token.delete(0, token.length());
+               }
            }
 
            appendStaticString(token, processedSchema);

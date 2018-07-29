@@ -5,7 +5,7 @@ import static com.gslab.pepper.input.CustomFunctions.*;
 
 public class {{JAVA_CLASS_PLACEHOLDER}} implements Iterator<String> {
 
- private static StringBuilder builder = new StringBuilder();
+ private static StringBuilder builder = new StringBuilder(18);
 
  @Override
  public boolean hasNext() {
