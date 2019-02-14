@@ -8,8 +8,8 @@
     <artifactId>pepper-box</artifactId>
     <version>1.0</version>
     <properties>
-        <jmeter.version>3.1</jmeter.version>
-        <kafka.version>0.9.0.1</kafka.version>
+        <jmeter.version>5.0</jmeter.version>
+        <kafka.version>2.1.0</kafka.version>
         <jdk.version>1.8</jdk.version>
         <joda-time.version>2.9.7</joda-time.version>
         <guava.version>21.0</guava.version>

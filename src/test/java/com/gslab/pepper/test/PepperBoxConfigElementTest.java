@@ -1,29 +1,25 @@
 package com.gslab.pepper.test;
 
+import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonObject;
+import com.gslab.pepper.config.plaintext.PlainTextConfigElement;
 import com.gslab.pepper.config.plaintext.PlainTextConfigElementBeanInfo;
+import com.gslab.pepper.config.serialized.SerializedConfigElement;
 import com.gslab.pepper.config.serialized.SerializedConfigElementBeanInfo;
-import com.gslab.pepper.exception.PepperBoxException;
+import com.gslab.pepper.input.SchemaProcessor;
 import com.gslab.pepper.input.serialized.ClassPropertyEditor;
 import com.gslab.pepper.model.FieldExpressionMapping;
-import com.gslab.pepper.config.plaintext.PlainTextConfigElement;
-import com.gslab.pepper.config.serialized.SerializedConfigElement;
-import com.gslab.pepper.input.SchemaProcessor;
 import com.gslab.pepper.util.PropsKeys;
-import net.didion.jwnl.data.Exc;
-import org.apache.jmeter.testbeans.BeanInfoSupport;
-import org.apache.jmeter.threads.JMeterContext;
-import org.apache.jmeter.threads.JMeterContextService;
-import org.apache.jmeter.threads.JMeterVariables;
-import org.json.JSONObject;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import java.beans.PropertyDescriptor;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
+import org.apache.jmeter.threads.JMeterContext;
+import org.apache.jmeter.threads.JMeterContextService;
+import org.apache.jmeter.threads.JMeterVariables;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  * Created by satish on 26/2/17.
@@ -44,8 +40,8 @@ public class PepperBoxConfigElementTest {
         plainTextConfigElement.setPlaceHolder(PropsKeys.MSG_PLACEHOLDER);
         plainTextConfigElement.iterationStart(null);
         Object object = JMeterContextService.getContext().getVariables().getObject(PropsKeys.MSG_PLACEHOLDER);
-        JSONObject jsonObject = new JSONObject(object.toString());
-        Assert.assertTrue("Failed to run config element", (Integer)jsonObject.get("messageId") > 0);
+        JsonObject jsonObject = Json.parse(object.toString()).asObject();
+        Assert.assertTrue("Failed to run config element", jsonObject.getInt("messageId", -1) > 0);
 
     }
 
@@ -77,6 +73,7 @@ public class PepperBoxConfigElementTest {
 
     }
 
+    @Test
     public void serializedConfigErrorTest(){
 
         List<FieldExpressionMapping> fieldExpressionMappings = TestInputUtils.getWrongFieldExpressionMappings();
