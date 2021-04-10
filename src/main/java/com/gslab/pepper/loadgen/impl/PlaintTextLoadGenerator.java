@@ -28,10 +28,10 @@ public class PlaintTextLoadGenerator implements BaseLoadGenerator {
      * PlaintTextLoadGenerator constructor which initializes message iterator using schemaProcessor
      * @param jsonSchema
      */
-    public PlaintTextLoadGenerator(String jsonSchema) throws PepperBoxException {
+    public PlaintTextLoadGenerator(String headers, String jsonSchema) throws PepperBoxException {
 
         try {
-            this.messageIterator = schemaProcessor.getPlainTextMessageIterator(jsonSchema);
+            this.messageIterator = schemaProcessor.getPlainTextMessageIterator(headers, jsonSchema);
         }catch (Exception exc){
             log.error("Please make sure that expressions functions are already defined and parameters are correctly passed.", exc);
             throw new PepperBoxException(exc);

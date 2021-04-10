@@ -32,7 +32,7 @@ public class SchemaTranslator {
      * @throws IllegalAccessException
      * @throws InstantiationException
      */
-    public Iterator getPlainTextMsgIterator(String schemExecStatement) throws PepperBoxException {
+    public Iterator getPlainTextMsgIterator(String headerExecStatement, String schemExecStatement) throws PepperBoxException {
 
 
         try {
@@ -41,7 +41,7 @@ public class SchemaTranslator {
             String classname =  PropsKeys.JAVA_CLASS + System.currentTimeMillis();
 
             //Replace placeholders in template and get java source code
-            final String messageGeneratorSource = getTemplateFileContent(PropsKeys.PLAINTEXT_MESSAGE_GENERATOR_TPL).replace(PropsKeys.MSG_GEN_PLC_HLDR, schemExecStatement).replace(PropsKeys.JAVA_CLS_PLC_HLDR, classname);
+            final String messageGeneratorSource = getTemplateFileContent(PropsKeys.PLAINTEXT_MESSAGE_GENERATOR_TPL).replace(PropsKeys.HEADER_GEN_PLC_HLDR, headerExecStatement).replace(PropsKeys.MSG_GEN_PLC_HLDR, schemExecStatement).replace(PropsKeys.JAVA_CLS_PLC_HLDR, classname);
 
             //Compile class from java source and load class in jvm
             Class<?> messageIterator = InMemoryJavaCompiler.compileSchemaClass(classname, messageGeneratorSource);

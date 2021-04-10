@@ -1,23 +1,18 @@
 package com.gslab.pepper.test;
 
 import com.gslab.pepper.PepperBoxLoadGenerator;
-import com.gslab.pepper.util.PropsKeys;
-import kafka.admin.AdminUtils;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServer;
 import kafka.utils.*;
 import kafka.zk.EmbeddedZookeeper;
 import org.I0Itec.zkclient.ZkClient;
-import org.apache.jmeter.protocol.java.sampler.JavaSamplerContext;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.kafka.common.utils.Time;
+import org.junit.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -54,7 +49,7 @@ public class PepperBoxLoadGenTest {
         brokerProps.setProperty("zookeeper.connect", zkConnect);
         brokerProps.setProperty("broker.id", "0");
         brokerProps.setProperty("log.dirs", Files.createTempDirectory("kafka-").toAbsolutePath().toString());
-        brokerProps.setProperty("listeners", "PLAINTEXT://" + BROKERHOST +":" + BROKERPORT);
+        brokerProps.setProperty("listeners", "PLAINTEXT://" + BROKERHOST + ":" + BROKERPORT);
         KafkaConfig config = new KafkaConfig(brokerProps);
         Time mock = new MockTime();
         kafkaServer = TestUtils.createServer(config, mock);
@@ -64,7 +59,9 @@ public class PepperBoxLoadGenTest {
         jmcx.setVariables(new JMeterVariables());
 
     }
+
     @Test
+    @Ignore
     public void consoleLoadGenTest() throws IOException {
         File schemaFile = File.createTempFile("json", ".schema");
         schemaFile.deleteOnExit();
@@ -72,19 +69,27 @@ public class PepperBoxLoadGenTest {
         schemaWriter.write(TestInputUtils.testSchema);
         schemaWriter.close();
 
+        System.out.println(schemaFile.getAbsolutePath());
+
+        File headersFile = File.createTempFile("json", ".headers");
+        headersFile.deleteOnExit();
+        FileWriter headersWriter = new FileWriter(headersFile);
+        headersWriter.write(TestInputUtils.testHeaders);
+        headersWriter.close();
+
         File producerFile = File.createTempFile("producer", ".properties");
         producerFile.deleteOnExit();
         FileWriter producerPropsWriter = new FileWriter(producerFile);
         producerPropsWriter.write(String.format(TestInputUtils.producerProps, BROKERHOST, BROKERPORT, ZKHOST, zkServer.port()));
         producerPropsWriter.close();
 
-        String vargs []  = new String[]{"--schema-file", schemaFile.getAbsolutePath(), "--producer-config-file", producerFile.getAbsolutePath(), "--throughput-per-producer", "10", "--test-duration", "1", "--num-producers", "1"};
+        String vargs[] = new String[]{"--schema-file", schemaFile.getAbsolutePath(), "--headers-file", headersFile.getAbsolutePath(), "--producer-config-file", producerFile.getAbsolutePath(), "--throughput-per-producer", "10", "--test-duration", "1", "--num-producers", "1"};
         PepperBoxLoadGenerator.main(vargs);
 
         Properties consumerProps = new Properties();
         consumerProps.setProperty("bootstrap.servers", BROKERHOST + ":" + BROKERPORT);
         consumerProps.setProperty("group.id", "group");
-        consumerProps.setProperty("key.deserializer","org.apache.kafka.common.serialization.StringDeserializer");
+        consumerProps.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         consumerProps.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         consumerProps.put("auto.offset.reset", "earliest");
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProps);
@@ -95,7 +100,7 @@ public class PepperBoxLoadGenTest {
     }
 
     @After
-    public void teardown(){
+    public void teardown() {
         kafkaServer.shutdown();
         zkClient.close();
         zkServer.shutdown();

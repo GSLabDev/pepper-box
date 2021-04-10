@@ -1,6 +1,5 @@
 package com.gslab.pepper.input;
 
-import com.google.common.base.Splitter;
 import com.gslab.pepper.exception.PepperBoxException;
 import com.gslab.pepper.model.FieldExpressionMapping;
 import com.gslab.pepper.util.PropsKeys;
@@ -93,14 +92,12 @@ public class SchemaParser {
 
     private void appendStaticString(StringBuilder token, StringBuilder processedSchema) {
 
-        Iterable<String> tokenSplits = Splitter.fixedLength(PropsKeys.CONST_TOKEN_SIZE).split(token.toString().replaceAll(PropsKeys.ESC_QUOTE, PropsKeys.TRIPLE_ESC_QUOTE));
-        tokenSplits.forEach(tokenSplit ->{
-            processedSchema.append(PropsKeys.STR_APPEND);
-            processedSchema.append(PropsKeys.ESC_QUOTE);
-            processedSchema.append(tokenSplit);
-            processedSchema.append(PropsKeys.ESC_QUOTE);
-            processedSchema.append(PropsKeys.CLOSING_BRACKET);
-        });
+        processedSchema.append(PropsKeys.STR_APPEND);
+        processedSchema.append(PropsKeys.ESC_QUOTE);
+        processedSchema.append(token.toString().replaceAll(PropsKeys.ESC_QUOTE, PropsKeys.TRIPLE_ESC_QUOTE));
+        processedSchema.append(PropsKeys.ESC_QUOTE);
+        processedSchema.append(PropsKeys.CLOSING_BRACKET);
+
     }
 
     /**

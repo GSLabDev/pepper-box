@@ -3,7 +3,6 @@ package com.gslab.pepper.config.plaintext;
 
 import com.gslab.pepper.loadgen.BaseLoadGenerator;
 import com.gslab.pepper.loadgen.impl.PlaintTextLoadGenerator;
-import com.gslab.pepper.util.PropsKeys;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.engine.event.LoopIterationEvent;
 import org.apache.jmeter.engine.event.LoopIterationListener;
@@ -13,18 +12,14 @@ import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
-import javax.swing.*;
-
 /**
  * The PlainTextConfigElement custom jmeter config element. This class acts as plain text feeder to jmeter java sampler, it includes plaintext load generator which takes input schema and generates messages.
  *
- * @Author  Satish Bhor<satish.bhor@gslab.com>, Nachiket Kate <nachiket.kate@gslab.com>
+ * @Author Satish Bhor<satish.bhor@gslab.com>, Nachiket Kate <nachiket.kate@gslab.com>
  * @Version 1.0
  * @since 28/02/2017
  */
 public class PlainTextConfigElement extends ConfigTestElement implements TestBean, LoopIterationListener {
-
-    private static final Logger log = LoggingManager.getLoggerForClass();
 
     //Input schema template could be json, xml, csv or custom plain text format
     private String jsonSchema;
@@ -34,6 +29,10 @@ public class PlainTextConfigElement extends ConfigTestElement implements TestBea
 
     //Message placeholder key
     private String placeHolder;
+
+    private String headers;
+
+    private static final Logger log = LoggingManager.getLoggerForClass();
 
 
     /**
@@ -50,7 +49,7 @@ public class PlainTextConfigElement extends ConfigTestElement implements TestBea
             try {
 
                 //instantiate plaintext load generator
-                generator = new PlaintTextLoadGenerator(getJsonSchema());
+                generator = new PlaintTextLoadGenerator(getHeaders(), getJsonSchema());
 
             } catch (Exception e) {
                 log.error("Failed to create PlaintTextLoadGenerator instance", e);
@@ -88,4 +87,11 @@ public class PlainTextConfigElement extends ConfigTestElement implements TestBea
         this.placeHolder = placeHolder;
     }
 
+    public String getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(String headers) {
+        this.headers = headers;
+    }
 }

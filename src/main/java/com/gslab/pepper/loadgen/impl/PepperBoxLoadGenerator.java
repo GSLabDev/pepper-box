@@ -1,4 +1,4 @@
-package com.gslab.pepper;
+package com.gslab.pepper.loadgen.impl;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;

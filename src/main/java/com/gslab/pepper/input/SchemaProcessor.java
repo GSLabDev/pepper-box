@@ -30,10 +30,11 @@ public class SchemaProcessor {
      * @throws InstantiationException
      * @throws ClassNotFoundException
      */
-    public Iterator getPlainTextMessageIterator(String inputSchema) throws PepperBoxException {
+    public Iterator getPlainTextMessageIterator(String headers, String inputSchema) throws PepperBoxException {
 
-        String processedSchema = schemaParser.getProcessedSchema(inputSchema);
-        return  schemaTranslator.getPlainTextMsgIterator(processedSchema);
+        String processedHeaders = new SchemaParser().getProcessedSchema(headers);
+        String processedSchema = new SchemaParser().getProcessedSchema(inputSchema);
+        return  schemaTranslator.getPlainTextMsgIterator(processedHeaders, processedSchema);
     }
 
     /**

@@ -20,6 +20,9 @@ public class PlainTextConfigElementBeanInfo extends BeanInfoSupport {
     //Message placeholder key
     private static final String PLACE_HOLDER = "placeHolder";
 
+    //Message requestId key
+    private static final String HEADERS = "headers";
+
    /**
     * Constructor which creates property group and creates UI for PlainTextConfigElement.
     */
@@ -29,7 +32,7 @@ public class PlainTextConfigElementBeanInfo extends BeanInfoSupport {
 
         //Create property group
         createPropertyGroup("plain_text_load_generator", new String[] {
-                PLACE_HOLDER, JSON_SCHEMA
+                PLACE_HOLDER, HEADERS, JSON_SCHEMA
         });
 
         PropertyDescriptor placeHolderProps = property(PLACE_HOLDER);
@@ -41,5 +44,15 @@ public class PlainTextConfigElementBeanInfo extends BeanInfoSupport {
         PropertyDescriptor p = property(JSON_SCHEMA);
         p.setPropertyEditorClass(TextAreaEditor.class);
         p.setValue(NOT_UNDEFINED, Boolean.TRUE);
+
+        p = property(PLACE_HOLDER);
+        p.setValue(NOT_UNDEFINED, Boolean.TRUE);
+        p.setValue(DEFAULT, PropsKeys.MSG_GEN_PLC_HLDR);
+        p.setValue(NOT_EXPRESSION, Boolean.TRUE);
+
+        p = property(HEADERS);
+        p.setPropertyEditorClass(TextAreaEditor.class);
+        p.setValue(NOT_UNDEFINED, Boolean.TRUE);
+
     }
 }
