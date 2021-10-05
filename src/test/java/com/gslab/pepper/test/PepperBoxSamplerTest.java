@@ -269,6 +269,73 @@ public class PepperBoxSamplerTest {
 
     }
 
+    @Test
+    public void sslSamplerTest() throws IOException {
+        String keyPassword = "keyPassword";
+
+        String keyStoreLocation = "keyStore/location";
+        String keyStorePassword = "keyStorePassword";
+        String keyStoreType = "PKCS12";
+
+        String trustStoreLocation = "trustStore/location";
+        String trustStorePassword = "trustStorePassword";
+        String trustStoreType = "PKCS12";
+
+        PepperBoxKafkaSampler sampler = new PepperBoxKafkaSampler();
+        Arguments arguments = sampler.getDefaultParameters();
+        arguments.removeArgument(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG);
+        arguments.removeArgument(ProducerKeys.KAFKA_TOPIC_CONFIG);
+        arguments.removeArgument(ProducerKeys.ZOOKEEPER_SERVERS);
+        arguments.addArgument(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, BROKERHOST + ":" + BROKERPORT);
+        arguments.addArgument(ProducerKeys.KAFKA_TOPIC_CONFIG, TOPIC);
+        arguments.addArgument(ProducerKeys.SSL_ENABLED, ProducerKeys.FLAG_YES);
+
+        arguments.addArgument(SslConfigs.SSL_KEY_PASSWORD_CONFIG, keyPassword);
+        arguments.addArgument(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStoreLocation);
+        arguments.addArgument(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, keyStorePassword);
+        arguments.addArgument(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, keyStoreType);
+
+        arguments.addArgument(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, trustStoreLocation);
+        arguments.addArgument(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, trustStorePassword);
+        arguments.addArgument(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, trustStoreType);
+
+        jmcx = new JavaSamplerContext(arguments);
+        sampler.setupTest(jmcx);
+
+        PlainTextConfigElement plainTextConfigElement = new PlainTextConfigElement();
+        plainTextConfigElement.setJsonSchema(TestInputUtils.testSchema);
+        plainTextConfigElement.setPlaceHolder(PropsKeys.MSG_PLACEHOLDER);
+        plainTextConfigElement.iterationStart(null);
+
+        Object msgSent = JMeterContextService.getContext().getVariables().getObject(PropsKeys.MSG_PLACEHOLDER);
+        sampler.runTest(jmcx);
+
+        Properties consumerProps = new Properties();
+        consumerProps.setProperty("bootstrap.servers", BROKERHOST + ":" + BROKERPORT);
+        consumerProps.setProperty("group.id", "group0");
+        consumerProps.setProperty("client.id", "consumer0");
+        consumerProps.setProperty("key.deserializer","org.apache.kafka.common.serialization.StringDeserializer");
+        consumerProps.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        consumerProps.put("auto.offset.reset", "earliest");
+        consumerProps.put("ssl.key.password", keyPassword);
+        consumerProps.put("ssl.keystore.location", keyStoreLocation);
+        consumerProps.put("ssl.keystore.password", keyStorePassword);
+        consumerProps.put("ssl.keystore.type", keyStoreType);
+        consumerProps.put("ssl.truststore.location", trustStoreLocation);
+        consumerProps.put("ssl.truststore.password", trustStorePassword);
+        consumerProps.put("ssl.truststore.type", trustStoreType);
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProps);
+        consumer.subscribe(Arrays.asList(TOPIC));
+        ConsumerRecords<String, String> records = consumer.poll(30000);
+        Assert.assertEquals(1, records.count());
+        for (ConsumerRecord<String, String> record : records){
+            Assert.assertEquals("Failed to validate produced message", msgSent.toString(), record.value());
+        }
+
+        sampler.teardownTest(jmcx);
+
+    }
+
     @After
     public void teardown(){
         kafkaServer.shutdown();

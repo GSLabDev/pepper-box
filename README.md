@@ -78,8 +78,10 @@ For example to enable SSL properties you can add below properties
 _ssl.key.password
 _ssl.keystore.location
 _ssl.keystore.password
+_ssl.keystore.type
 _ssl.truststore.location
 _ssl.truststore.password
+_ssl.truststore.type
 
 ```
 ***Note:*** These are just sample properties, SSL properties are already included in kafka sampler.
